@@ -16,3 +16,7 @@ Paddles are controlled by brute force algo that just follows the ball position.
 To run the game, navigate to the directory where the file `pong.py` is located and run the following command in your terminal: `python pong.py`
 
 Feel free to experiment with ball speed multiplier and decay multiplier :)
+
+TODO:
+
+- Decoupe game time from rendering

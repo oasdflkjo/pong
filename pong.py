@@ -3,14 +3,25 @@ from pygame import mixer
 import sys
 
 # Constants
+FPS = 60
+
 SCREEN_WIDTH = 640
 SCREEN_HEIGHT = 480
+SCREEN_WIDTH_CENTER = SCREEN_WIDTH // 2
+SCREEN_HEIGHT_CENTER = SCREEN_HEIGHT // 2
+
 BALL_SIZE = 20
+BALL_BASE_SPEED = 3
+BALL_SPEED_MULTIPLIER = 3.5
+BALL_SPEED_DECAY = 0.98
+BALL_SPEED_MULTIPLIER_INITIAL = 1
+
 PADDLE_WIDTH = 20
 PADDLE_HEIGHT = 100
-FPS = 165
 BORDER_WIDTH = 10
-SPEED_MULTIPLIER_INITIAL = 1
+
+COLOR_DRAW = (255, 0, 0)
+COLOR_BACKGROUND = (0, 0, 0)
 
 
 class Pong:
@@ -23,13 +34,13 @@ class Pong:
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font(None, 50)
 
-        self.ball = pygame.Rect(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, BALL_SIZE, BALL_SIZE)
-        self.ball_speed = [3, 3]
-        self.speed_multiplier = SPEED_MULTIPLIER_INITIAL
-        self.speed_decay = 0.98
+        self.ball = pygame.Rect(SCREEN_WIDTH_CENTER, SCREEN_HEIGHT_CENTER, BALL_SIZE, BALL_SIZE)
+        self.ball_speed = [BALL_BASE_SPEED, BALL_BASE_SPEED]
+        self.speed_multiplier = BALL_SPEED_MULTIPLIER_INITIAL
+        self.speed_decay = BALL_SPEED_DECAY
 
-        self.paddle1 = pygame.Rect(20, SCREEN_HEIGHT // 2, PADDLE_WIDTH, PADDLE_HEIGHT)
-        self.paddle2 = pygame.Rect(600, SCREEN_HEIGHT // 2, PADDLE_WIDTH, PADDLE_HEIGHT)
+        self.paddle1 = pygame.Rect(20, SCREEN_HEIGHT_CENTER, PADDLE_WIDTH, PADDLE_HEIGHT)
+        self.paddle2 = pygame.Rect(600, SCREEN_HEIGHT_CENTER, PADDLE_WIDTH, PADDLE_HEIGHT)
         self.score1 = 0
         self.score2 = 0
 
@@ -45,13 +56,13 @@ class Pong:
             paddle.y = SCREEN_HEIGHT - BORDER_WIDTH - PADDLE_HEIGHT
 
     def reset_game(self):
-        self.ball.x = SCREEN_WIDTH // 2
-        self.ball.y = SCREEN_HEIGHT // 2
+        self.ball.x = SCREEN_WIDTH_CENTER
+        self.ball.y = SCREEN_HEIGHT_CENTER
         self.paddle1.x = 20
-        self.paddle1.y = SCREEN_HEIGHT // 2
+        self.paddle1.y = SCREEN_HEIGHT_CENTER
         self.paddle2.x = 600
-        self.paddle2.y = SCREEN_HEIGHT // 2
-        self.speed_multiplier = SPEED_MULTIPLIER_INITIAL
+        self.paddle2.y = SCREEN_HEIGHT_CENTER
+        self.speed_multiplier = BALL_SPEED_MULTIPLIER_INITIAL
 
     def run(self):
         while True:
@@ -86,30 +97,30 @@ class Pong:
 
             if self.ball.colliderect(self.paddle1) or self.ball.colliderect(self.paddle2):
                 self.ball_speed[0] *= -1
-                self.speed_multiplier *= 3.5
+                self.speed_multiplier *= BALL_SPEED_MULTIPLIER
                 self.pop_sound.play()
 
             self.speed_multiplier = max(1, self.speed_multiplier * self.speed_decay)
 
-            self.screen.fill((0, 0, 0))
-            pygame.draw.rect(self.screen, (255, 255, 255), (0, 0, SCREEN_WIDTH, BORDER_WIDTH))  # Top border
-            pygame.draw.rect(self.screen, (255, 255, 255), (0, 0, BORDER_WIDTH, SCREEN_HEIGHT))  # Left border
-            pygame.draw.rect(self.screen, (255, 255, 255), (0, SCREEN_HEIGHT - BORDER_WIDTH, SCREEN_WIDTH, BORDER_WIDTH))  # Bottom border
-            pygame.draw.rect(self.screen, (255, 255, 255), (SCREEN_WIDTH - BORDER_WIDTH, 0, BORDER_WIDTH, SCREEN_HEIGHT))  # Right border
+            self.screen.fill(COLOR_BACKGROUND)
+            pygame.draw.rect(self.screen, COLOR_DRAW, (0, 0, SCREEN_WIDTH, BORDER_WIDTH))  # Top border
+            pygame.draw.rect(self.screen, COLOR_DRAW, (0, 0, BORDER_WIDTH, SCREEN_HEIGHT))  # Left border
+            pygame.draw.rect(self.screen, COLOR_DRAW, (0, SCREEN_HEIGHT - BORDER_WIDTH, SCREEN_WIDTH, BORDER_WIDTH))  # Bottom border
+            pygame.draw.rect(self.screen, COLOR_DRAW, (SCREEN_WIDTH - BORDER_WIDTH, 0, BORDER_WIDTH, SCREEN_HEIGHT))  # Right border
 
-            pygame.draw.rect(self.screen, (255, 255, 255), self.ball)
-            pygame.draw.rect(self.screen, (255, 255, 255), self.paddle1)
-            pygame.draw.rect(self.screen, (255, 255, 255), self.paddle2)
+            pygame.draw.rect(self.screen, COLOR_DRAW, self.ball)
+            pygame.draw.rect(self.screen, COLOR_DRAW, self.paddle1)
+            pygame.draw.rect(self.screen, COLOR_DRAW, self.paddle2)
 
-            score_text = self.font.render(str(self.score1), True, (255, 255, 255))
-            score_text2 = self.font.render(str(self.score2), True, (255, 255, 255))
-            self.screen.blit(score_text, (SCREEN_WIDTH // 2 - 50, 20))
-            self.screen.blit(score_text2, (SCREEN_WIDTH // 2 + 20, 20))
+            score_text = self.font.render(str(self.score1), True, COLOR_DRAW)
+            score_text2 = self.font.render(str(self.score2), True, COLOR_DRAW)
+            self.screen.blit(score_text, (SCREEN_WIDTH_CENTER - 50, 20))
+            self.screen.blit(score_text2, (SCREEN_WIDTH_CENTER + 20, 20))
 
-            framerate_text = self.font.render(f"{self.clock.get_fps():.0f} FPS", True, (255, 255, 255))
+            framerate_text = self.font.render(f"{self.clock.get_fps():.0f} FPS", True, COLOR_DRAW)
             self.screen.blit(framerate_text, (SCREEN_WIDTH - 170, 20))
             
-            ball_speed_text = self.font.render(f"{self.ball_speed[0] * self.speed_multiplier.__abs__():.0f} px/s", True, (255, 255, 255))
+            ball_speed_text = self.font.render(f"{self.ball_speed[0] * self.speed_multiplier.__abs__():.0f} px/s", True, COLOR_DRAW)
             self.screen.blit(ball_speed_text, (SCREEN_WIDTH - 170, 70))
             pygame.display.flip()
 
