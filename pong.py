@@ -3,7 +3,7 @@ from pygame import mixer
 import sys
 
 # Constants
-FPS = 60
+FPS = 160
 
 SCREEN_WIDTH = 640
 SCREEN_HEIGHT = 480
@@ -52,8 +52,17 @@ class Pong:
 
         if paddle.top < BORDER_WIDTH:
             paddle.y = BORDER_WIDTH
-        if paddle.bottom > SCREEN_HEIGHT - BORDER_WIDTH:
+        elif paddle.bottom > SCREEN_HEIGHT - BORDER_WIDTH:
             paddle.y = SCREEN_HEIGHT - BORDER_WIDTH - PADDLE_HEIGHT
+
+    # Check for ball collision with paddle top/bottom
+        if ball.colliderect(paddle):
+            if ball.bottom >= paddle.top and ball.top <= paddle.top:
+                self.ball_speed[1] = -abs(self.ball_speed[1])
+                self.ball.y = paddle.top - BALL_SIZE
+            elif ball.top <= paddle.bottom and ball.bottom >= paddle.bottom:
+                self.ball_speed[1] = abs(self.ball_speed[1])
+                self.ball.y = paddle.bottom
 
     def reset_game(self):
         self.ball.x = SCREEN_WIDTH_CENTER
@@ -63,6 +72,11 @@ class Pong:
         self.paddle2.x = 600
         self.paddle2.y = SCREEN_HEIGHT_CENTER
         self.speed_multiplier = BALL_SPEED_MULTIPLIER_INITIAL
+    
+    def lerp(self, a, b, t):
+        x = int((1 - t) * a[0] + t * b[0])
+        y = int((1 - t) * a[1] + t * b[1])
+        return x, y
 
     def run(self):
         while True:
@@ -76,8 +90,14 @@ class Pong:
             self.ai_paddle(self.paddle1, self.ball, 5)
             self.ai_paddle(self.paddle2, self.ball, 5)
 
-            self.ball.x += self.ball_speed[0] * self.speed_multiplier
-            self.ball.y += self.ball_speed[1] * self.speed_multiplier
+            next_ball_pos = [self.ball.x + self.ball_speed[0] * self.speed_multiplier, self.ball.y + self.ball_speed[1] * self.speed_multiplier]
+            self.ball.x, self.ball.y = self.lerp([self.ball.x, self.ball.y], next_ball_pos, 0.5)
+
+            next_paddle1_pos = [self.paddle1.x, self.paddle1.y + min(5, self.paddle1.centery)]
+            self.paddle1.x, self.paddle1.y = self.lerp([self.paddle1.x, self.paddle1.y], next_paddle1_pos, 0.5)
+
+            next_paddle2_pos = [self.paddle2.x, self.paddle2.y + min(5, self.paddle2.centery)]
+            self.paddle2.x, self.paddle2.y = self.lerp([self.paddle2.x, self.paddle2.y], next_paddle2_pos, 0.5)
 
             if self.ball.top <= BORDER_WIDTH:
                 self.ball_speed[1] *= -1
@@ -123,6 +143,7 @@ class Pong:
             ball_speed_text = self.font.render(f"{self.ball_speed[0] * self.speed_multiplier.__abs__():.0f} px/s", True, COLOR_DRAW)
             self.screen.blit(ball_speed_text, (SCREEN_WIDTH - 170, 70))
             pygame.display.flip()
+
 
 
 if __name__ == "__main__":
